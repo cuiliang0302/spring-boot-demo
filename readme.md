@@ -25,6 +25,7 @@ mvn clean package
 ```
 
 # 运行项目
+
 ```bash
 java -jar target/SpringBootDemo-0.0.1-SNAPSHOT.jar
 # 控制台输出以下内容表示运行成功
@@ -33,6 +34,7 @@ java -jar target/SpringBootDemo-0.0.1-SNAPSHOT.jar
 ```
 
 # 访问测试
+
 ```bash
 ➜  SpringBootDemo git:(main) ✗ curl 127.0.0.1:8888/       
 Hello SpringBoot Version:v1   
@@ -41,6 +43,7 @@ ok
 ```
 
 # 修改首页输出内容
+
 修改文件：com/example/springbootdemo/HelloWorldController.java
 
 修改内容：public String hello() {
