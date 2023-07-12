@@ -4,9 +4,11 @@
 
 # 版本依赖
 
-Jdk:17.0.7
+Openjdk:17.0.7
 
 Maven:3.9.3
+
+Spring Boot:3.1.1
 
 # 打包构建
 
