@@ -8,7 +8,7 @@ public class HelloWorldController {
     @RequestMapping("/")
     @ResponseBody
     public String hello() {
-        return "<h1>Hello SpringBoot</h1><p>Version:v1 Env:product</p>";
+        return "<h1>Hello SpringBoot</h1><p>Version:v1 Env:test</p>";
     }
     @RequestMapping("/health")
     @ResponseBody
