@@ -51,3 +51,9 @@ ok
 修改内容：public String hello() {
 return "Hello SpringBoot Version:v1";
 }
+
+# 构建镜像
+```bash
+➜  SpringBootDemo git:(test) ✗ docker build -t springboot_demo:v1 .   
+➜  SpringBootDemo git:(test) ✗ docker run -d -p 8888:8888 --name springboot_demo springboot_demo:v1
+```
