@@ -52,7 +52,7 @@ ok
 return "Hello SpringBoot Version:v1";
 }
 
-# 构建镜像并部署
+# 构建docker镜像并部署
 ```bash
 ➜  SpringBootDemo git:(main) ✗ docker build -t springboot_demo:v1 .   
 ➜  SpringBootDemo git:(main) ✗ docker run -d -p 8888:8888 --name springboot_demo springboot_demo:v1
