@@ -99,7 +99,6 @@ pipeline {
     post {
         always {
             echo '开始发送邮件通知'
-            // 构建后发送邮件
             emailext(
                 subject: '构建通知：${PROJECT_NAME} - Build # ${BUILD_NUMBER} - ${BUILD_STATUS}!',
                 body: '${FILE,path="email.html"}',
