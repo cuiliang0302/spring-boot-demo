@@ -77,20 +77,35 @@ pipeline {
         }
 
         stage('项目部署') {
+            environment {
+                // 目标主机信息
+                HOST_NAME = "springboot1"
+            }
             steps {
                 echo '开始部署项目'
-                echo "${IMAGE_NAME}"
                 // 获取harbor账号密码
                 withCredentials([usernamePassword(credentialsId: "${HARBOR_CRED}", passwordVariable: 'HARBOR_PASSWORD', usernameVariable: 'HARBOR_USERNAME')]) {
                     // 执行远程命令
-                    sshPublisher(publishers: [sshPublisherDesc(configName: 'springboot1', transfers: [sshTransfer(
+                    sshPublisher(publishers: [sshPublisherDesc(configName: "${HOST_NAME}", transfers: [sshTransfer(
                         cleanRemote: false, excludes: '', execCommand: "sh -x /opt/jenkins/springboot/deployment.sh ${HARBOR_USERNAME} ${HARBOR_PASSWORD} ${IMAGE_NAME} ${IMAGE_APP}",
                         execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '/opt/jenkins/springboot',
-                        remoteDirectorySDF: false, removePrefix: '', sourceFiles: '**/*')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false
+                        remoteDirectorySDF: false, removePrefix: '', sourceFiles: 'deployment.sh')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false
                     )])
                 }
                 echo '部署项目完成'
             }
+        }
+    }
+    post {
+        always {
+            echo '开始发送邮件通知'
+            // 构建后发送邮件
+            emailext(
+                subject: '构建通知：${PROJECT_NAME} - Build # ${BUILD_NUMBER} - ${BUILD_STATUS}!',
+                body: '${FILE,path="email.html"}',
+                to: 'cuiliang0302@qq.com'
+            )
+            echo '邮件通知发送完成'
         }
     }
 }
