@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  demo
+  namespace: NAME_SPACE
+  labels:
+    app:  demo
+spec:
+  selector:
+    matchLabels:
+      app: demo
+  template:
+    metadata:
+      labels:
+        app:  demo
+    spec:
+      containers:
+        - name:  demo
+          image:  IMAGE_NAME
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8888
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8888
+          ports:
+            - containerPort:  8888
+              name:  demo
+          volumeMounts:
+            - name: localtime
+              mountPath: /etc/localtime
+      volumes:
+        - name: localtime
+          hostPath:
+            path: /usr/share/zoneinfo/Asia/Shanghai
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo
+  namespace: NAME_SPACE
+spec:
+  selector:
+    app: demo
+  type: ClusterIP
+  sessionAffinity: None
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+  ports:
+    - name: demo
+      port: 8888
+      targetPort: 8888
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: demo
+  namespace: NAME_SPACE
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`DOMAIN_NAME`)
+      kind: Rule
+      services:
+        - name: demo
+          port: 8888
