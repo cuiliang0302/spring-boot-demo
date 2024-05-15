@@ -174,7 +174,7 @@ spec:
                 echo '开始修改资源清单'
                 script {
                     if (branchName == 'master' ) {
-                        NAME_SPACE = 'default'
+                        NAME_SPACE = 'prod'
                         DOMAIN_NAME = 'demo.local.com'
                     } else if (branchName == 'test') {
                         NAME_SPACE = 'test'
