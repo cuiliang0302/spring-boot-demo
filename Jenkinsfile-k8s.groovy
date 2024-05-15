@@ -192,13 +192,13 @@ spec:
             }
         }
     }
-     post {
-         always {
-             echo '开始发送邮件通知'
-             emailext(subject: '构建通知：${PROJECT_NAME} - Build # ${BUILD_NUMBER} - ${BUILD_STATUS}!',
+    post {
+        always {
+            echo '开始发送邮件通知'
+            emailext(subject: '构建通知：${PROJECT_NAME} - Build # ${BUILD_NUMBER} - ${BUILD_STATUS}!',
                      body: '${FILE,path="email.html"}',
                      to: 'cuiliang0302@qq.com')
-             echo '邮件通知发送完成'
-         }
-     }
+            echo '邮件通知发送完成'
+        }
+    }
 }
