@@ -3,76 +3,75 @@ pipeline {
         kubernetes {
             // 定义要在 Kubernetes 中运行的 Pod 模板
             yaml '''
-            apiVersion: v1
-            kind: Pod
-            metadata:
-            name: jenkins-slave
-            namespace: cicd
-            labels:
-              name: jenkins-slave
-            spec:
-            containers:
-            - name: jnlp
-              image: harbor.local.com/cicd/jenkins-agent:v1.0
-              resources:
-                limits:
-                  memory: "512Mi"
-                  cpu: "500m"
-              securityContext:
-                privileged: true
-              volumeMounts:
-                - name: buildkit
-                  mountPath: "/run/buildkit"
-                - name: containerd
-                  mountPath: "/run/containerd/containerd.sock"
-                - name: kube-config
-                  mountPath: "/root/.kube/"
-                  readOnly: true
-            - name: maven
-              image: harbor.local.com/cicd/maven:3.9.3
-              resources:
-                limits:
-                  memory: "512Mi"
-                  cpu: "500m"
-              command:
-                - 'sleep'
-              args:
-                - '9999'
-              volumeMounts:
-                - name: maven-data
-                  mountPath: "/root/.m2"
-            - name: buildkitd
-              image: harbor.local.com/cicd/buildkit:v0.13.2
-              resources:
-                limits:
-                  memory: "256Mi"
-                  cpu: "500m"
-              securityContext:
-                privileged: true
-              volumeMounts:
-                - name: buildkit
-                  mountPath: "/run/buildkit"
-                - name: buildkit-data
-                  mountPath: "/var/lib/buildkit"
-                - name: containerd
-                  mountPath: "/run/containerd/containerd.sock"
-            volumes:
-              - name: maven-data
-                persistentVolumeClaim:
-                  claimName: jenkins-maven
-              - name: buildkit
-                hostPath:
-                  path: /run/buildkit
-              - name: buildkit-data
-                hostPath:
-                  path: /var/lib/buildkit
-              - name: containerd
-                hostPath:
-                  path: /run/containerd/containerd.sock
-              - name: kube-config
-                secret:
-                  secretName: kube-config
-      '''
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: jenkins-slave
+spec:
+  containers:
+  - name: jnlp
+    image: harbor.local.com/cicd/jenkins-slave:v1.0
+    resources:
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - name: buildkit
+      mountPath: "/run/buildkit/"
+    - name: containerd
+      mountPath: "/run/containerd/containerd.sock"
+    - name: kube-config
+      mountPath: "/root/.kube/"
+      readOnly: true
+  - name: maven
+    image: harbor.local.com/cicd/maven:3.9.3
+    resources:
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+    command:
+      - 'sleep'
+    args:
+      - '9999'
+    volumeMounts:
+      - name: maven-data
+        mountPath: "/root/.m2"
+  - name: buildkitd
+    image: harbor.local.com/cicd/buildkit:v0.13.2
+    resources:
+      limits:
+        memory: "256Mi"
+        cpu: "500m"
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - name: buildkit
+      mountPath: "/run/buildkit/"
+    - name: buildkit-data
+      mountPath: "/var/lib/buildkit/"
+    - name: containerd
+      mountPath: "/run/containerd/containerd.sock"
+  volumes:
+  - name: maven-data
+    persistentVolumeClaim:
+      claimName: jenkins-maven
+  - name: buildkit
+    hostPath:
+      path: /run/buildkit/
+  - name: buildkit-data
+    hostPath:
+      path: /var/lib/buildkit/
+  - name: containerd
+    hostPath:
+      path: /run/containerd/containerd.sock
+  - name: kube-config
+    secret:
+      secretName: kube-config
+            '''
+            retries 2
         }
     }
     environment {
@@ -88,15 +87,15 @@ pipeline {
                 GITLAB_CRED = "gitlab-cuiliang-password"
                 GITLAB_URL = "http://gitlab.cicd.svc/develop/sprint_boot_demo.git"
             }
-            steps{
+            steps {
                 echo '开始拉取代码'
                 checkout scmGit(branches: [[name: '*/${BRANCH}']], extensions: [], userRemoteConfigs: [[credentialsId: "${GITLAB_CRED}", url: "${GITLAB_URL}"]])
                 echo '拉取代码完成'
             }
         }
         stage('编译打包') {
-            steps{
-                container('maven'){
+            steps {
+                container('maven') {
                     // 指定使用maven container进行打包
                     echo '开始编译打包'
                     sh 'mvn clean package'
@@ -110,7 +109,7 @@ pipeline {
                 SONARQUBE_SCANNER = "SonarQubeScanner"
                 SONARQUBE_SERVER = "SonarQubeServer"
             }
-            steps{
+            steps {
                 echo '开始代码审查'
                 script {
                     def scannerHome = tool "${SONARQUBE_SCANNER}"
@@ -127,11 +126,20 @@ pipeline {
                 HARBOR_URL = "harbor.local.com"
                 HARBOR_PROJECT = "spring_boot_demo"
                 // 镜像标签
-                IMAGE_TAG = VersionNumber versionPrefix:'v', versionNumberString: '${BUILD_DATE_FORMATTED, "yyMMdd"}.${BUILDS_TODAY}'
+                IMAGE_TAG = ''
+                // 镜像名称
+                IMAGE_NAME = ''
             }
             steps {
                 echo '开始构建镜像'
                 script {
+                    if ("${params.BRANCH}" == 'master') {
+                        IMAGE_TAG = VersionNumber versionPrefix: 'p', versionNumberString: '${BUILD_DATE_FORMATTED, "yyMMdd"}.${BUILDS_TODAY}'
+                    } else if (params.BRANCH == 'test') {
+                        IMAGE_TAG = VersionNumber versionPrefix: 't', versionNumberString: '${BUILD_DATE_FORMATTED, "yyMMdd"}.${BUILDS_TODAY}'
+                    } else {
+                        error("Unsupported branch: ${params.BRANCH}")
+                    }
                     IMAGE_NAME = "${HARBOR_URL}/${HARBOR_PROJECT}/${IMAGE_APP}:${IMAGE_TAG}"
                     sh "nerdctl build --insecure-registry -t ${IMAGE_NAME} . "
                 }
@@ -170,14 +178,12 @@ pipeline {
                     }
                 }
                 // 使用Content Replace插件进行k8s资源清单内容替换
-                contentReplace(configs: [fileContentReplaceConfig(configs: [
-                        fileContentReplaceItemConfig(replace: "${IMAGE_NAME}", search: 'IMAGE_NAME'),
-                        fileContentReplaceItemConfig(replace: "${NAME_SPACE}", search: 'NAME_SPACE'),
-                        fileContentReplaceItemConfig(replace: "${DOMAIN_NAME}", search: 'DOMAIN_NAME')],
+                contentReplace(configs: [fileContentReplaceConfig(configs: [fileContentReplaceItemConfig(replace: "${IMAGE_NAME}", search: 'IMAGE_NAME'),
+                                                                            fileContentReplaceItemConfig(replace: "${NAME_SPACE}", search: 'NAME_SPACE'),
+                                                                            fileContentReplaceItemConfig(replace: "${DOMAIN_NAME}", search: 'DOMAIN_NAME')],
                         fileEncoding: 'UTF-8',
                         filePath: "${YAML_NAME}",
-                        lineSeparator: 'Unix'
-                )])
+                        lineSeparator: 'Unix')])
                 echo '修改资源清单完成'
                 sh "cat ${YAML_NAME}"
                 echo '开始部署资源清单'
@@ -189,11 +195,9 @@ pipeline {
     post {
         always {
             echo '开始发送邮件通知'
-            emailext(
-                    subject: '构建通知：${PROJECT_NAME} - Build # ${BUILD_NUMBER} - ${BUILD_STATUS}!',
+            emailext(subject: '构建通知：${PROJECT_NAME} - Build # ${BUILD_NUMBER} - ${BUILD_STATUS}!',
                     body: '${FILE,path="email.html"}',
-                    to: 'cuiliang0302@qq.com'
-            )
+                    to: 'cuiliang0302@qq.com')
             echo '邮件通知发送完成'
         }
     }
