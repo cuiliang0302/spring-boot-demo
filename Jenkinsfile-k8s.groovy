@@ -79,6 +79,7 @@ spec:
         HARBOR_CRED = "harbor-cuiliang-password"
         IMAGE_NAME = ""
         IMAGE_APP = "demo"
+        branchName = ""
     }
     stages {
         stage('拉取代码') {
@@ -89,7 +90,12 @@ spec:
             }
             steps {
                 echo '开始拉取代码'
-                checkout scmGit(branches: [[name: '*/${BRANCH}']], extensions: [], userRemoteConfigs: [[credentialsId: "${GITLAB_CRED}", url: "${GITLAB_URL}"]])
+                checkout scmGit(branches: [[name: '*/*']], extensions: [], userRemoteConfigs: [[credentialsId: "${GITLAB_CRED}", url: "${GITLAB_URL}"]])
+                // 获取当前拉取的分支名称
+                script {
+                    def branch = env.GIT_BRANCH ?: 'master'
+                    branchName = branch.split('/')[-1]
+                }
                 echo '拉取代码完成'
             }
         }
@@ -133,9 +139,9 @@ spec:
             steps {
                 echo '开始构建镜像'
                 script {
-                    if ("${params.BRANCH}" == 'master') {
+                    if (branchName == 'master') {
                         IMAGE_TAG = VersionNumber versionPrefix: 'p', versionNumberString: '${BUILD_DATE_FORMATTED, "yyMMdd"}.${BUILDS_TODAY}'
-                    } else if (params.BRANCH == 'test') {
+                    } else if (branchName == 'test') {
                         IMAGE_TAG = VersionNumber versionPrefix: 't', versionNumberString: '${BUILD_DATE_FORMATTED, "yyMMdd"}.${BUILDS_TODAY}'
                     } else {
                         error("Unsupported branch: ${params.BRANCH}")
@@ -167,10 +173,10 @@ spec:
             steps {
                 echo '开始修改资源清单'
                 script {
-                    if ("${params.BRANCH}" == 'master') {
+                    if (branchName == 'master' ) {
                         NAME_SPACE = 'default'
                         DOMAIN_NAME = 'demo.local.com'
-                    } else if (params.BRANCH == 'test') {
+                    } else if (branchName == 'test') {
                         NAME_SPACE = 'test'
                         DOMAIN_NAME = 'demo.test.com'
                     } else {
