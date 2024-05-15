@@ -3,76 +3,75 @@ pipeline {
         kubernetes {
             // 定义要在 Kubernetes 中运行的 Pod 模板
             yaml '''
-            apiVersion: v1
-            kind: Pod
-            metadata:
-            name: jenkins-slave
-            namespace: cicd
-            labels:
-              name: jenkins-slave
-            spec:
-            containers:
-            - name: jnlp
-              image: harbor.local.com/cicd/jenkins-agent:v1.0
-              resources:
-                limits:
-                  memory: "512Mi"
-                  cpu: "500m"
-              securityContext:
-                privileged: true
-              volumeMounts:
-                - name: buildkit
-                  mountPath: "/run/buildkit"
-                - name: containerd
-                  mountPath: "/run/containerd/containerd.sock"
-                - name: kube-config
-                  mountPath: "/root/.kube/"
-                  readOnly: true
-            - name: maven
-              image: harbor.local.com/cicd/maven:3.9.3
-              resources:
-                limits:
-                  memory: "512Mi"
-                  cpu: "500m"
-              command:
-                - 'sleep'
-              args:
-                - '9999'
-              volumeMounts:
-                - name: maven-data
-                  mountPath: "/root/.m2"
-            - name: buildkitd
-              image: harbor.local.com/cicd/buildkit:v0.13.2
-              resources:
-                limits:
-                  memory: "256Mi"
-                  cpu: "500m"
-              securityContext:
-                privileged: true
-              volumeMounts:
-                - name: buildkit
-                  mountPath: "/run/buildkit"
-                - name: buildkit-data
-                  mountPath: "/var/lib/buildkit"
-                - name: containerd
-                  mountPath: "/run/containerd/containerd.sock"
-            volumes:
-              - name: maven-data
-                persistentVolumeClaim:
-                  claimName: jenkins-maven
-              - name: buildkit
-                hostPath:
-                  path: /run/buildkit
-              - name: buildkit-data
-                hostPath:
-                  path: /var/lib/buildkit
-              - name: containerd
-                hostPath:
-                  path: /run/containerd/containerd.sock
-              - name: kube-config
-                secret:
-                  secretName: kube-config
-      '''
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: jenkins-slave
+spec:
+  containers:
+  - name: jnlp
+    image: harbor.local.com/cicd/jenkins-slave:v1.0
+    resources:
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - name: buildkit
+      mountPath: "/run/buildkit/"
+    - name: containerd
+      mountPath: "/run/containerd/containerd.sock"
+    - name: kube-config
+      mountPath: "/root/.kube/"
+      readOnly: true
+  - name: maven
+    image: harbor.local.com/cicd/maven:3.9.3
+    resources:
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+    command:
+      - 'sleep'
+    args:
+      - '9999'
+    volumeMounts:
+      - name: maven-data
+        mountPath: "/root/.m2"
+  - name: buildkitd
+    image: harbor.local.com/cicd/buildkit:v0.13.2
+    resources:
+      limits:
+        memory: "256Mi"
+        cpu: "500m"
+    securityContext:
+      privileged: true
+    volumeMounts:
+    - name: buildkit
+      mountPath: "/run/buildkit/"
+    - name: buildkit-data
+      mountPath: "/var/lib/buildkit/"
+    - name: containerd
+      mountPath: "/run/containerd/containerd.sock"
+  volumes:
+  - name: maven-data
+    persistentVolumeClaim:
+      claimName: jenkins-maven
+  - name: buildkit
+    hostPath:
+      path: /run/buildkit/
+  - name: buildkit-data
+    hostPath:
+      path: /var/lib/buildkit/
+  - name: containerd
+    hostPath:
+      path: /run/containerd/containerd.sock
+  - name: kube-config
+    secret:
+      secretName: kube-config
+            '''
+            retries 2
         }
     }
     environment {
@@ -127,11 +126,20 @@ pipeline {
                 HARBOR_URL = "harbor.local.com"
                 HARBOR_PROJECT = "spring_boot_demo"
                 // 镜像标签
-                IMAGE_TAG = VersionNumber versionPrefix: 'v', versionNumberString: '${BUILD_DATE_FORMATTED, "yyMMdd"}.${BUILDS_TODAY}'
+                IMAGE_TAG = ''
+                // 镜像名称
+                IMAGE_NAME = ''
             }
             steps {
                 echo '开始构建镜像'
                 script {
+                    if ("${params.BRANCH}" == 'master') {
+                        IMAGE_TAG = VersionNumber versionPrefix: 'p', versionNumberString: '${BUILD_DATE_FORMATTED, "yyMMdd"}.${BUILDS_TODAY}'
+                    } else if (params.BRANCH == 'test') {
+                        IMAGE_TAG = VersionNumber versionPrefix: 't', versionNumberString: '${BUILD_DATE_FORMATTED, "yyMMdd"}.${BUILDS_TODAY}'
+                    } else {
+                        error("Unsupported branch: ${params.BRANCH}")
+                    }
                     IMAGE_NAME = "${HARBOR_URL}/${HARBOR_PROJECT}/${IMAGE_APP}:${IMAGE_TAG}"
                     sh "nerdctl build --insecure-registry -t ${IMAGE_NAME} . "
                 }
@@ -184,13 +192,13 @@ pipeline {
             }
         }
     }
-    post {
-        always {
-            echo '开始发送邮件通知'
-            emailext(subject: '构建通知：${PROJECT_NAME} - Build # ${BUILD_NUMBER} - ${BUILD_STATUS}!',
-                    body: '${FILE,path="email.html"}',
-                    to: 'cuiliang0302@qq.com')
-            echo '邮件通知发送完成'
-        }
-    }
+     post {
+         always {
+             echo '开始发送邮件通知'
+             emailext(subject: '构建通知：${PROJECT_NAME} - Build # ${BUILD_NUMBER} - ${BUILD_STATUS}!',
+                     body: '${FILE,path="email.html"}',
+                     to: 'cuiliang0302@qq.com')
+             echo '邮件通知发送完成'
+         }
+     }
 }
