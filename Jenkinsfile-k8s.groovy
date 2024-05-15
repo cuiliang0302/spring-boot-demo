@@ -88,15 +88,15 @@ pipeline {
                 GITLAB_CRED = "gitlab-cuiliang-password"
                 GITLAB_URL = "http://gitlab.cicd.svc/develop/sprint_boot_demo.git"
             }
-            steps{
+            steps {
                 echo '开始拉取代码'
                 checkout scmGit(branches: [[name: '*/${BRANCH}']], extensions: [], userRemoteConfigs: [[credentialsId: "${GITLAB_CRED}", url: "${GITLAB_URL}"]])
                 echo '拉取代码完成'
             }
         }
         stage('编译打包') {
-            steps{
-                container('maven'){
+            steps {
+                container('maven') {
                     // 指定使用maven container进行打包
                     echo '开始编译打包'
                     sh 'mvn clean package'
@@ -110,7 +110,7 @@ pipeline {
                 SONARQUBE_SCANNER = "SonarQubeScanner"
                 SONARQUBE_SERVER = "SonarQubeServer"
             }
-            steps{
+            steps {
                 echo '开始代码审查'
                 script {
                     def scannerHome = tool "${SONARQUBE_SCANNER}"
@@ -127,7 +127,7 @@ pipeline {
                 HARBOR_URL = "harbor.local.com"
                 HARBOR_PROJECT = "spring_boot_demo"
                 // 镜像标签
-                IMAGE_TAG = VersionNumber versionPrefix:'v', versionNumberString: '${BUILD_DATE_FORMATTED, "yyMMdd"}.${BUILDS_TODAY}'
+                IMAGE_TAG = VersionNumber versionPrefix: 'v', versionNumberString: '${BUILD_DATE_FORMATTED, "yyMMdd"}.${BUILDS_TODAY}'
             }
             steps {
                 echo '开始构建镜像'
@@ -170,14 +170,12 @@ pipeline {
                     }
                 }
                 // 使用Content Replace插件进行k8s资源清单内容替换
-                contentReplace(configs: [fileContentReplaceConfig(configs: [
-                        fileContentReplaceItemConfig(replace: "${IMAGE_NAME}", search: 'IMAGE_NAME'),
-                        fileContentReplaceItemConfig(replace: "${NAME_SPACE}", search: 'NAME_SPACE'),
-                        fileContentReplaceItemConfig(replace: "${DOMAIN_NAME}", search: 'DOMAIN_NAME')],
+                contentReplace(configs: [fileContentReplaceConfig(configs: [fileContentReplaceItemConfig(replace: "${IMAGE_NAME}", search: 'IMAGE_NAME'),
+                                                                            fileContentReplaceItemConfig(replace: "${NAME_SPACE}", search: 'NAME_SPACE'),
+                                                                            fileContentReplaceItemConfig(replace: "${DOMAIN_NAME}", search: 'DOMAIN_NAME')],
                         fileEncoding: 'UTF-8',
                         filePath: "${YAML_NAME}",
-                        lineSeparator: 'Unix'
-                )])
+                        lineSeparator: 'Unix')])
                 echo '修改资源清单完成'
                 sh "cat ${YAML_NAME}"
                 echo '开始部署资源清单'
@@ -189,11 +187,9 @@ pipeline {
     post {
         always {
             echo '开始发送邮件通知'
-            emailext(
-                    subject: '构建通知：${PROJECT_NAME} - Build # ${BUILD_NUMBER} - ${BUILD_STATUS}!',
+            emailext(subject: '构建通知：${PROJECT_NAME} - Build # ${BUILD_NUMBER} - ${BUILD_STATUS}!',
                     body: '${FILE,path="email.html"}',
-                    to: 'cuiliang0302@qq.com'
-            )
+                    to: 'cuiliang0302@qq.com')
             echo '邮件通知发送完成'
         }
     }
