@@ -1,0 +1,2 @@
+FROM maven:3.9.3
+RUN sed -i -E '159a <mirror>\n<id>alimaven</id>\n<name>aliyun maven</name>\n<url>http://maven.aliyun.com/nexus/content/groups/public/</url>\n<mirrorOf>central</mirrorOf>\n</mirror>' /usr/share/maven/conf/settings.xml

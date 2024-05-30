@@ -1,0 +1,5 @@
+FROM jenkins/inbound-agent:latest-jdk17
+USER root
+COPY kubectl /usr/bin/kubectl
+COPY nerdctl /usr/bin/nerdctl
+COPY buildctl /usr/bin/buildctl
