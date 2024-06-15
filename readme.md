@@ -57,3 +57,12 @@ return "Hello SpringBoot Version:v1";
 ➜  SpringBootDemo git:(main) ✗ docker build -t springboot_demo:v1 .   
 ➜  SpringBootDemo git:(main) ✗ docker run -d -p 8888:8888 --name springboot_demo springboot_demo:v1
 ```
+
+# 自动化测试
+jmeter目录下存放示例接口自动化测试脚本，主要测试内容如下
+
+- https://www.baidu.com/
+- http://demo.local.com:8888/
+- http://demo.local.com/
+
+如果需要自动化测试，在服务部署后使用域名或者主机名+端口方式访问测试
