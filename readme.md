@@ -60,7 +60,7 @@ return "Hello SpringBoot Version:v1";
 ➜  SpringBootDemo git:(main) ✗ docker run -d -p 8888:8888 --name springboot_demo springboot_demo:v1
 ```
 
-# CICD
+# CI/CD
 
 ## 参考文档
 
@@ -74,11 +74,11 @@ cicd
 ├── Dockerfile-maven # 自定义maven镜像，替换国内源
 ├── deployment-docker.sh # 部署到docker环境脚本
 ├── deployment-linux.sh # 部署到linux系统环境脚本
-├── gitlab-ci # gitlab cicd流水线
+├── gitlab-ci # gitlab ci/cd流水线
 │   ├── docker.yml # 部署到docker环境完整流水线
 │   ├── k8s.yml # 部署到k8s环境完整流水线
 │   └── linux.yml # 部署到linux系统环境完整流水线
-├── jenkins # jenkins cicd流水线
+├── jenkins # jenkins ci/cd流水线
 │   ├── Dockerfile-jenkins-slave # 自定义jenkins slave镜像的文本文件
 │   ├── Jenkinsfile-docker.groovy # jenkins发布到docker环境的完整流水线
 │   ├── Jenkinsfile-k8s.groovy # jenkins发布到k8s环境的完整流水线
@@ -93,7 +93,7 @@ cicd
 
 jmeter目录下存放示例接口自动化测试脚本，主要测试内容如下
 
-- https://www.baidu.com/
+- http://www.baidu.com/
 - http://demo:8888/
 - http://demo.local.com/
 
