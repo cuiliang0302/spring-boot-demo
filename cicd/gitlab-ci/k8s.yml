@@ -1,0 +1,72 @@
+default:
+  cache:
+    paths: # 定义全局缓存路径
+      - target/
+
+variables: # 定义制品存储路径
+  ARTIFACT_NAME: $CI_PROJECT_NAME/$CI_COMMIT_BRANCH/$CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA.jar
+
+stages:
+  - build
+  - code_scan
+  - product
+  - deploy
+  - test
+
+mvn:
+  stage: build
+  tags:
+    - java
+  script:
+    - mvn clean package # 编译打包
+    - ls target
+  cache:
+    policy: pull  #不下载缓存
+
+unit_test:
+  stage: build
+  tags:
+    - java
+  script:
+    - mvn test # 进行单元测试
+    - ls target
+  artifacts: # 收集单元测试报告
+    reports:
+      junit: 'target/surefire-reports/TEST-*.xml'
+
+code_scan:
+  stage: code_scan
+  tags:
+    - java
+  script:
+    - "sonar-scanner -Dsonar.projectKey=$CI_PROJECT_NAME -Dproject.settings=$CI_PROJECT_DIR/sonar-project.properties \
+    -Dsonar.branch.name=$CI_COMMIT_REF_NAME -Dsonar.host.url=http://192.168.10.71:9000 -Dsonar.login=$SONAR_QUBE_TOEKN"
+  artifacts:
+    paths:
+      - "target/*.jar" # 制品目录
+
+
+product:
+  stage: product
+  tags: # 在java机器上传制品
+    - java
+  script:
+    - curl -uadmin:$ARTIFACTORY_KEY -T target/*.jar "http://192.168.10.76:8081/artifactory/devops/$ARTIFACT_NAME"
+
+deploy:
+  stage: deploy
+  tags:
+    - java
+  script:
+    - sh -x cicd/deployment-linux.sh $ARTIFACTORY_KEY /opt/$CI_PROJECT_NAME http://192.168.10.76:8081/artifactory/devops/$ARTIFACT_NAME $CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA.jar
+
+pages:
+  stage: test
+  tags:
+    - jmeter
+  script: # 生成站点
+    - "jmeter -n -t $PWD/cicd/jmeter/demo.jmx -l $CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA.jt1 -e -o $PWD/public -Jjemter.save.saveservice.output_format=csv"
+    - ls $PWD/public/
+  artifacts: # 上传制品
+    paths:
+      - public
