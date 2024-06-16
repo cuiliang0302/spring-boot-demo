@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${ENV, var="JOB_NAME"}-第${BUILD_NUMBER}次构建日志</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .container h2 {
+            text-align: center;
+        }
+        .logo img {
+            max-width: 150px;
+            height: auto;
+        }
+        .content {
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="content">
+        <h2>Jenkins ${PROJECT_NAME}项目构建结果</h2>
+        <p>尊敬的用户：</p>
+        <p>${PROJECT_NAME}项目构建结果为<span style="color:red;font-weight: bold;">${BUILD_STATUS}</span>，以下是详细信息：</p>
+        <h4>构建信息</h4>
+        <hr/>
+        <ul>
+            <li>项目名称：${PROJECT_NAME}</li>
+            <li>构建编号：第${BUILD_NUMBER}次构建</li>
+            <li>触发原因：${CAUSE}</li>
+            <li>构建状态：${BUILD_STATUS}</li>
+            <li>构建日志：<a href="${BUILD_URL}console">${BUILD_URL}console</a></li>
+            <li>构建Url：<a href="${BUILD_URL}">${BUILD_URL}</a></li>
+            <li>工作目录：<a href="${PROJECT_URL}ws">${PROJECT_URL}ws</a></li>
+            <li>项目Url：<a href="${PROJECT_URL}">${PROJECT_URL}</a></li>
+        </ul>
+        <h4>失败用例</h4>
+        <hr/>
+        <p>$FAILED_TESTS</p>
+        <h4>最近提交</h4>
+        <hr/>
+        <ul>
+            ${CHANGES_SINCE_LAST_SUCCESS, reverse=true, format="%c", changesFormat="<li>%d [%a] %m</li>"}
+        </ul>
+        <h4>提交详情</h4>
+        <hr/>
+        <p><a href="${PROJECT_URL}changes">${PROJECT_URL}changes</a></p>
+        <p style="margin-top:50px">如有任何疑问或需要帮助，请随时联系我们。</p>
+    </div>
+    <div class="footer">
+        <p>此为系统自动发送邮件，请勿回复。</p>
+    </div>
+</div>
+</body>
+</html>

@@ -87,9 +87,9 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: "${HARBOR_CRED}", passwordVariable: 'HARBOR_PASSWORD', usernameVariable: 'HARBOR_USERNAME')]) {
                     // 执行远程命令
                     sshPublisher(publishers: [sshPublisherDesc(configName: "${HOST_NAME}", transfers: [sshTransfer(
-                        cleanRemote: false, excludes: '', execCommand: "sh -x /opt/jenkins/springboot/deployment.sh ${HARBOR_USERNAME} ${HARBOR_PASSWORD} ${IMAGE_NAME} ${IMAGE_APP}",
+                        cleanRemote: false, excludes: '', execCommand: "sh -x /opt/jenkins/springboot/deployment-docker.sh ${HARBOR_USERNAME} ${HARBOR_PASSWORD} ${IMAGE_NAME} ${IMAGE_APP}",
                         execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '/opt/jenkins/springboot',
-                        remoteDirectorySDF: false, removePrefix: '', sourceFiles: 'deployment.sh')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false
+                        remoteDirectorySDF: false, removePrefix: '', sourceFiles: 'deployment-docker.sh')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false
                     )])
                 }
                 echo '部署项目完成'
