@@ -1,24 +1,29 @@
 #!/bin/bash
-date >> /tmp/date.txt
 #接收外部参数
-ARTIFACTORY_KEY=$1
-TARGET_DIR=$2
-FILE_URL=$3
-FILE_NAME=$4
-JAVA_CMD="java -jar $TARGET_DIR/$FILE_NAME"
+ARTIFACT_USER=$1 # artifactory用户名
+ARTIFACTORY_KEY=$2 # artifactory密钥
+TARGET_PATH=$3 # 文件保存路径
+FILE_URL=$4 # 文件仓库路径
+JAVA_CMD="java -jar $TARGET_PATH"
+echo $ARTIFACT_USER
+echo $ARTIFACTORY_KEY
+echo $TARGET_PATH
+echo $FILE_URL
+echo $JAVA_CMD
+# 根据TARGET_PATH获取目录名
+DIRECTORY=$(dirname "$TARGET_PATH")
 
 # 检查目标目录是否存在，如果不存在就创建
-if [ ! -d "$TARGET_DIR" ]; then
-    mkdir -p "$TARGET_DIR"
+if [ ! -d "$DIRECTORY" ]; then
+    mkdir -p "$DIRECTORY"
+    echo "目录创建完成: $DIRECTORY"
 fi
 
 # 使用curl下载文件到目标目录
-curl -uadmin:$ARTIFACTORY_KEY -o "$TARGET_DIR/$(basename $FILE_URL)" "$FILE_URL"
-
-echo "下载完成：$TARGET_DIR/$(basename $FILE_URL)"
-
+curl -u$ARTIFACT_USER:$ARTIFACTORY_KEY -o "$TARGET_PATH" "$FILE_URL"
+echo "文件下载完成：$TARGET_PATH"
 # 获取当前运行的进程ID
-PID=$(ps -aux | grep java | grep "$TARGET_DIR" | grep -v grep | awk '{print $2}')
+PID=$(ps -aux | grep java | grep "$DIRECTORY" | grep -v grep | awk '{print $2}')
 
 # 检查进程是否存在
 if [ -z "$PID" ]; then
@@ -33,5 +38,3 @@ fi
 echo "正在启动新进程"
 nohup $JAVA_CMD > /dev/null 2>&1 &
 echo "新进程已启动"
-sleep 10
-ss -tunlp | grep java

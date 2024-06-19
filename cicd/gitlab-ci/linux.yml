@@ -13,54 +13,53 @@ stages:
   - deploy
   - test
 
-mvn:
+mvn: # 编译打包
   stage: build
   tags:
     - java
   script:
-    - mvn clean package # 编译打包
-    - ls target
+    - mvn clean package
+    - ls target/
+  artifacts:
+    paths:
+      - "target/*.jar" # 制品目录
   cache:
     policy: pull  #不下载缓存
 
-unit_test:
+unit_test: # 单元测试
   stage: build
   tags:
     - java
   script:
-    - mvn test # 进行单元测试
-    - ls target
+    - mvn test
+    - ls target/surefire-reports/
   artifacts: # 收集单元测试报告
     reports:
       junit: 'target/surefire-reports/TEST-*.xml'
 
-code_scan:
+code_scan: # SonarQube代码扫描
   stage: code_scan
   tags:
     - java
   script:
-    - "sonar-scanner -Dsonar.projectKey=$CI_PROJECT_NAME -Dproject.settings=$CI_PROJECT_DIR/sonar-project.properties \
+    - "sonar-scanner -Dsonar.projectKey=$CI_PROJECT_NAME -Dproject.settings=$CI_PROJECT_DIR/cicd/sonar-project.properties \
     -Dsonar.branch.name=$CI_COMMIT_REF_NAME -Dsonar.host.url=http://192.168.10.71:9000 -Dsonar.login=$SONAR_QUBE_TOEKN"
-  artifacts:
-    paths:
-      - "target/*.jar" # 制品目录
 
-
-product:
+product: # 上传到制品库
   stage: product
   tags: # 在java机器上传制品
     - java
   script:
     - curl -uadmin:$ARTIFACTORY_KEY -T target/*.jar "http://192.168.10.76:8081/artifactory/devops/$ARTIFACT_NAME"
 
-deploy:
+deploy: # 部署到linux机器
   stage: deploy
   tags:
     - java
   script:
     - sh -x cicd/deployment-linux.sh $ARTIFACTORY_KEY /opt/$CI_PROJECT_NAME http://192.168.10.76:8081/artifactory/devops/$ARTIFACT_NAME $CI_PROJECT_NAME-$CI_COMMIT_SHORT_SHA.jar
 
-pages:
+pages: # 自动化测试
   stage: test
   tags:
     - jmeter
