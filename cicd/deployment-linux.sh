@@ -6,7 +6,6 @@ TARGET_PATH=$3 # 文件保存路径
 FILE_URL=$4 # 文件仓库路径
 JAVA_CMD="java -jar $TARGET_PATH"
 echo $ARTIFACT_USER
-echo $ARTIFACTORY_KEY
 echo $TARGET_PATH
 echo $FILE_URL
 echo $JAVA_CMD
