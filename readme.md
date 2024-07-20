@@ -86,6 +86,7 @@ cicd
 ├── jmeter # jmeter接口自动化测试
 │   └── demo.jmx # 接口自动化测试配置文件
 ├── k8s.yaml # 部署到k8s的yaml文件
+├── kustomize # k8s多环境部署文件
 └── sonar-project.properties # SonarQube代码扫描配置文件
 
 ```
