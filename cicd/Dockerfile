@@ -1,4 +1,6 @@
 FROM openjdk:17-jdk-alpine
+# 设置环境变量
+ENV ENV_NAME=prod
 EXPOSE 8888
 RUN apk --no-cache add curl
 ARG JAR_FILE=target/SpringBootDemo-0.0.1-SNAPSHOT.jar

@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  demo
+  labels:
+    app:  demo
+spec:
+  selector:
+    matchLabels:
+      app: demo
+  template:
+    metadata:
+      labels:
+        app:  demo
+    spec:
+      containers:
+        - name:  demo
+          image:  demo
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8888
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8888
+          ports:
+            - containerPort:  8888
+              name:  demo
