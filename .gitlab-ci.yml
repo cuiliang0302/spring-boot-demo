@@ -1,0 +1,76 @@
+include: # 引入模板库公共文件
+  - project: 'devops/gitlabci-template'
+    ref: master
+    file: 'jobs/build.yml'
+  - project: 'devops/gitlabci-template'
+    ref: master
+    file: 'jobs/test.yml'
+  - project: 'devops/gitlabci-template'
+    ref: master
+    file: 'jobs/sonarqube.yml'
+  - project: 'devops/gitlabci-template'
+    ref: master
+    file: 'jobs/harbor.yml'
+  - project: 'devops/gitlabci-template'
+    ref: master
+    file: 'jobs/kustomize.yml'
+
+variables: # 全局变量
+  SONAR_QUBE_PATH: "$CI_PROJECT_DIR/cicd/sonar-project.properties" # sonarqube配置文件地址
+  # 镜像上传
+  HARBOR_REPO: devops # harbor仓库名
+  HARBOR_USER: admin # harbor用户名
+  DOCKERFILE_PATH: cicd/Dockerfile # Dockerfile文件路径
+  IMAGE_NAME: "$CI_PROJECT_NAME:$CI_COMMIT_BRANCH-$CI_COMMIT_SHORT_SHA" # 镜像名称
+  # 更新yaml
+  CI_USER: gitlabci # gitlab ci用户名
+  CI_EMAIL: gitlabci@qq.com # gitlab ci用户邮箱
+  CONTAINER_NAME: demo # k8s控制器container名称
+
+default:
+  cache: # 全局缓存配置
+    paths:
+      - target/
+
+stages:
+  - build
+  - code_scan
+  - product
+  - update_yaml
+
+mvn: # 编译打包
+  stage: build
+  extends: .mvn-build
+  image: harbor.local.com/cicd/maven:v3.9.3 # 构建阶段使用指定的maven镜像
+  tags:
+    - k8s
+
+unit_test: # 单元测试
+  stage: build
+  extends: .mvn_unit_test
+  image: harbor.local.com/cicd/maven:v3.9.3 # 构建阶段使用指定的maven镜像
+  tags:
+    - k8s
+
+code_scan: # SonarQube代码扫描
+  stage: code_scan
+  extends: .sonarqube
+  image: harbor.local.com/cicd/sonar-scanner-cli:10 # 代码扫描阶段使用sonar-scanner-cli镜像
+  before_script:
+    - ls target/
+  tags:
+    - k8s
+
+product: # 打包上传镜像到harbor仓库
+  stage: product
+  image: harbor.local.com/cicd/gitlab-agent:v1.1
+  extends: .container-upload-harbor
+  tags:
+    - k8s
+
+update_yaml: # 更新资源清单
+  stage: update_yaml
+  image: harbor.local.com/cicd/gitlab-agent:v1.1
+  extends: .update-kustomize
+  tags:
+    - k8s
