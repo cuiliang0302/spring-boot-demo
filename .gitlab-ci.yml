@@ -11,9 +11,9 @@ include: # 引入模板库公共文件
   - project: 'devops/gitlabci-template'
     ref: master
     file: 'jobs/harbor.yml'
-  - project: 'devops/gitlabci-template'
+  - project: 'devops/update-rollout'
     ref: master
-    file: 'jobs/kustomize.yml'
+    file: 'jobs/rollout.yml'
 
 variables: # 全局变量
   SONAR_QUBE_PATH: "$CI_PROJECT_DIR/cicd/sonar-project.properties" # sonarqube配置文件地址
@@ -47,7 +47,7 @@ mvn: # 编译打包
 
 unit_test: # 单元测试
   stage: build
-  extends: .mvn_unit_test
+  extends: .mvn-unit-test
   image: harbor.local.com/cicd/maven:v3.9.3 # 构建阶段使用指定的maven镜像
   tags:
     - k8s
@@ -68,8 +68,8 @@ product: # 打包上传镜像到harbor仓库
   tags:
     - k8s
 
-update_yaml: # 更新资源清单
-  stage: update_yaml
+update-rollout: # 更新资源清单
+  stage: update-rollout
   image: harbor.local.com/cicd/gitlab-agent:v1.1
   extends: .update-kustomize
   tags:

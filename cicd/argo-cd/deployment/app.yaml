@@ -1,0 +1,39 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: demo-prod
+  namespace: argocd
+spec:
+  destination:
+    namespace: 'prod'
+    server: 'https://kubernetes.default.svc'
+  source:
+    path: cicd/kustomize/overlays/prod
+    repoURL: 'http://gitlab.local.com/devops/spring_boot_demo.git'
+    targetRevision: 'master'
+  sources: []
+  project: devops
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: demo-test
+  namespace: argocd
+spec:
+  destination:
+    namespace: 'test'
+    server: 'https://kubernetes.default.svc'
+  source:
+    path: cicd/kustomize/overlays/test
+    repoURL: 'http://gitlab.local.com/devops/spring_boot_demo.git'
+    targetRevision: 'test'
+  sources: []
+  project: devops
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

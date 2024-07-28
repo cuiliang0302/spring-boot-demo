@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: blue-green
+  namespace: argocd
+spec:
+  destination:
+    name: ''
+    namespace: demo
+    server: 'https://kubernetes.default.svc'
+  source:
+    path: cicd/argo-cd/bluegreen
+    repoURL: 'http://gitlab.local.com/devops/spring_boot_demo.git'
+    targetRevision: master
+  sources: []
+  project: devops
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
