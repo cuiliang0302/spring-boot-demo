@@ -1,14 +1,14 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: blue-green
+  name: canary
   namespace: argocd
 spec:
   destination:
     namespace: default
     server: 'https://kubernetes.default.svc'
   source:
-    path: cicd/argo-cd/bluegreen
+    path: cicd/argo-cd/canary
     repoURL: 'http://gitlab.local.com/devops/spring_boot_demo.git'
     targetRevision: master
   sources: []

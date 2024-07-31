@@ -1,2 +1,3 @@
 FROM maven:3.9.3
-RUN sed -i -E '159a <mirror>\n<id>TencentMirror</id>\n<name>Tencent Mirror</name>\n<url>https://mirrors.cloud.tencent.com/nexus/repository/maven-public/</url>\n<mirrorOf>central</mirrorOf>\n</mirror>' /usr/share/maven/conf/settings.xml
+# RUN sed -i -E '159a <mirror>\n<id>TencentMirror</id>\n<name>Tencent Mirror</name>\n<url>https://mirrors.cloud.tencent.com/nexus/repository/maven-public/</url>\n<mirrorOf>central</mirrorOf>\n</mirror>' /usr/share/maven/conf/settings.xml
+RUN sed -i -E '159a <mirror>\n<id>tsinghua</id>\n<url>https://repo.maven.apache.org/maven2/</url>\n<mirrorOf>central</mirrorOf>\n</mirror>' /usr/share/maven/conf/settings.xml

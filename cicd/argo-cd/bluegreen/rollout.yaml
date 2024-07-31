@@ -21,8 +21,8 @@ spec:
     spec:
       containers:
         - name: demo
-          image: IMAGE_NAME
+          image: harbor.local.com/devops/spring_boot_demo:master-7a5b421e
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 8888
               protocol: TCP

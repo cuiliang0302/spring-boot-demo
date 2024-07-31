@@ -1,0 +1,46 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: canary-rollout
+spec:
+  replicas: 10 # 定义期望的 Pod 副本数
+  strategy: # 定义升级策略
+    canary: # 金丝雀发布
+      # 2个 svc 名称
+      canaryService: canary-active  # 正式版本服务名
+      stableService: canary-preview  # 预览版本服务名
+      trafficRouting: # 配置加权轮循规则
+        # nginx ingress 配置：官方文档：https://argoproj.github.io/argo-rollouts/features/traffic-management/nginx/
+        # nginx:
+        #   # Either stableIngress or stableIngresses must be configured, but not both.
+        #   stableIngress: demo-stable-ingress
+        # traefik 配置: 官方文档：https://argoproj.github.io/argo-rollouts/features/traffic-management/traefik/
+        traefik:
+          weightedTraefikServiceName: canary-service # traefik加权轮循服务名
+      steps:  # 发布的节奏
+        - setWeight: 10 # 将10%的流量导向新版本
+        - pause:
+            duration: 5m # 暂停5分钟，用于监控新版本的表现。
+        - setWeight: 30 # 将30%的流量导向新版本
+        - pause:
+            duration: 1m # 暂停1分钟，用于监控新版本的表现。
+        - setWeight: 60 # 将60%的流量导向新版本
+        - pause:
+            duration: 30s # 暂停30秒钟，用于监控新版本的表现。
+        - setWeight: 100 # 将 100% 的流量导向新版本，完成金丝雀发布。
+  revisionHistoryLimit: 2 # 保留的修订历史版本数
+  selector: # 定义Pod模板标签，类似deployment
+    matchLabels:
+      app: demo
+  template: # 定义Pod模板，类似deployment
+    metadata:
+      labels:
+        app: demo
+    spec:
+      containers:
+        - name: demo
+          image: ikubernetes/myapp:v1
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP

@@ -1,0 +1,26 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: TraefikService # traefik加权轮循服务
+metadata:
+  name: canary-service
+spec:
+  weighted:
+    services:
+      - name: canary-active # 正式版本服务名
+        port: 80
+      - name: canary-preview # 预览版本服务名
+        port: 80
+---
+# 生产环境service对应的ingress
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute # traefik路由转发服务
+metadata:
+  name: demo-canary
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`canary.demo.com`) # 域名
+      kind: Rule
+      services:
+        - name: canary-service # 关联traefik加权轮循服务
+          kind: TraefikService

@@ -11,7 +11,7 @@ include: # 引入模板库公共文件
   - project: 'devops/gitlabci-template'
     ref: master
     file: 'jobs/harbor.yml'
-  - project: 'devops/update-rollout'
+  - project: 'devops/gitlabci-template'
     ref: master
     file: 'jobs/rollout.yml'
 
@@ -25,7 +25,13 @@ variables: # 全局变量
   # 更新yaml
   CI_USER: gitlabci # gitlab ci用户名
   CI_EMAIL: gitlabci@qq.com # gitlab ci用户邮箱
-  CONTAINER_NAME: demo # k8s控制器container名称
+  ROLLOUT_PATH: cicd/argo-cd/bluegreen/rollout.yaml # rollout文件路径
+
+workflow: # Gitlabci更新不触发流水线
+  rules:
+    - if: '$GITLAB_USER_LOGIN == "gitlabci"'
+      when: never
+    - when: always
 
 default:
   cache: # 全局缓存配置
@@ -40,14 +46,14 @@ stages:
 
 mvn: # 编译打包
   stage: build
-  extends: .mvn-build
+  extends: .mvn_build
   image: harbor.local.com/cicd/maven:v3.9.3 # 构建阶段使用指定的maven镜像
   tags:
     - k8s
 
 unit_test: # 单元测试
   stage: build
-  extends: .mvn-unit-test
+  extends: .mvn_unit_test
   image: harbor.local.com/cicd/maven:v3.9.3 # 构建阶段使用指定的maven镜像
   tags:
     - k8s
@@ -64,13 +70,13 @@ code_scan: # SonarQube代码扫描
 product: # 打包上传镜像到harbor仓库
   stage: product
   image: harbor.local.com/cicd/gitlab-agent:v1.1
-  extends: .container-upload-harbor
+  extends: .container_upload_harbor
   tags:
     - k8s
 
-update-rollout: # 更新资源清单
-  stage: update-rollout
+update_yaml: # 更新资源清单
+  stage: update_yaml
   image: harbor.local.com/cicd/gitlab-agent:v1.1
-  extends: .update-kustomize
+  extends: .update_rollout
   tags:
     - k8s
