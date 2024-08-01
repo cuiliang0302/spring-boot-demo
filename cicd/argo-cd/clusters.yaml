@@ -16,8 +16,8 @@ spec:
   project: devops
   syncPolicy:
     automated:
-      prune: false
-      selfHeal: false
+      prune: true
+      selfHeal: true
 ---
 # test分支代码发布至测试环境
 apiVersion: argoproj.io/v1alpha1
@@ -37,5 +37,5 @@ spec:
   project: devops
   syncPolicy:
     automated:
-      prune: false
-      selfHeal: false
+      prune: true
+      selfHeal: true
