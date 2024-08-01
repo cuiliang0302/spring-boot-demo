@@ -39,8 +39,8 @@ spec:
     spec:
       containers:
         - name: demo
-          image: ikubernetes/myapp:v1
+          image: harbor.local.com/devops/spring_boot_demo:master-e58822da
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 8888
               protocol: TCP

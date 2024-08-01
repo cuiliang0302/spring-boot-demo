@@ -25,7 +25,7 @@ variables: # 全局变量
   # 更新yaml
   CI_USER: gitlabci # gitlab ci用户名
   CI_EMAIL: gitlabci@qq.com # gitlab ci用户邮箱
-  ROLLOUT_PATH: cicd/argo-cd/bluegreen/rollout.yaml # rollout文件路径
+  ROLLOUT_PATH: cicd/argo-cd/canary/rollout.yaml # rollout文件路径
 
 workflow: # Gitlabci更新不触发流水线
   rules:

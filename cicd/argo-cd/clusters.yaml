@@ -1,0 +1,41 @@
+# master分支代码发布至生产环境
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: demo-prod
+  namespace: argocd
+spec:
+  destination:
+    namespace: 'prod'
+    server: 'https://kubernetes.default.svc'
+  source:
+    path: cicd/kustomize/overlays/prod
+    repoURL: 'http://gitlab.local.com/devops/spring_boot_demo.git'
+    targetRevision: 'master'
+  sources: []
+  project: devops
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: false
+---
+# test分支代码发布至测试环境
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: demo-test
+  namespace: argocd
+spec:
+  destination:
+    namespace: 'test'
+    server: 'https://192.168.10.10:6443'
+  source:
+    path: cicd/kustomize/overlays/test
+    repoURL: 'http://gitlab.local.com/devops/spring_boot_demo.git'
+    targetRevision: 'test'
+  sources: []
+  project: devops
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: false

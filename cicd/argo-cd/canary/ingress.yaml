@@ -6,9 +6,21 @@ spec:
   weighted:
     services:
       - name: canary-active # 正式版本服务名
-        port: 80
+        port: 8888
       - name: canary-preview # 预览版本服务名
-        port: 80
+        port: 8888
+---
+apiVersion: traefik.io/v1alpha1
+kind: TraefikService # traefik加权轮循服务
+metadata:
+  name: canary-service
+spec:
+  weighted:
+    services:
+      - name: canary-active # 正式版本服务名
+        port: 8888
+      - name: canary-preview # 预览版本服务名
+        port: 8888
 ---
 # 生产环境service对应的ingress
 apiVersion: traefik.io/v1alpha1

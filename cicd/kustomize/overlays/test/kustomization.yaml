@@ -8,3 +8,7 @@ patches:
 - path: env.yaml
 - path: ingress.yaml
 namespace: test
+images:
+  - name: demo
+    newName: harbor.local.com/devops/spring_boot_demo
+    newTag: test-e46b0a5c

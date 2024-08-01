@@ -8,3 +8,7 @@ patches:
 - path: env.yaml
 - path: ingress.yaml
 namespace: prod
+images:
+  - name: demo
+    newName: harbor.local.com/devops/spring_boot_demo
+    newTag: master-c9cd9569
